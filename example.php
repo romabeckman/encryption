@@ -3,28 +3,18 @@
 require './vendor/autoload.php';
 
 use \Encryption\Encryption;
-use \Encryption\JSONWebToken;
 
-// JSONWebToken::$compareIss = false; //Set false to disable auto-comparison with Domain. Default True.
-// JSONWebToken::$defaultExpiration = null; //Set null to disable date expiration or add param in __constructor. Default '2 hours'.
+$text = "My text to encrypt";
 
-$Encryption = new Encryption('__ENCRYPT_KEY__', '__SECURITY_KEY__');
+$key = "__ENCRYPT_KEY__"; // encrypt or decrypt key
+$securitykey = "__SECURITY_KEY__"; // compare and validate encrypted token
+$cipher = "aes-256-cbc"; // see openssl_get_cipher_methods()
+$cipherHMAC = "sha384"; // see hash_hmac_algos()
 
-$JSONWebToken = new JSONWebToken(
-        ['nome' => 'Firstname Lastname', 'email' => 'my_email@email.com']
-);
-$JSONWebToken
-        ->setJti(1)
-        ->setSub('My Teste')
-        ->setAud('Username');
+$Encryption = new Encryption($key, $securitykey, $cipher, $cipherHMAC);
 
-$jwt = JSONWebToken::encode($Encryption, $JSONWebToken);
-//$jwt = JSONWebToken::encode($Encryption, $JSONWebToken, true); // To get token for use in url
-
-echo $jwt;
-
-echo '<hr>';
-
-$decoded = JSONWebToken::decode($Encryption, $jwt);
-print_r($decoded);
-
+$token = Encryption::encrypt($Encryption, $text);
+echo $token;
+echo "<hr>";
+$textDecrypted = Encryption::decrypt($Encryption, $token);
+echo $textDecrypted; // will print "My text to encrypt"

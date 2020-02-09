@@ -16,8 +16,8 @@ class Encryption
     {
         $this->key = $key;
         $this->keyHMAC = $keykeyHMAC;
-        $this->cipher = strtolower($cipher);
-        $this->cipherHMAC = strtolower($cipherHMAC);
+        $this->cipher = $cipher;
+        $this->cipherHMAC = $cipherHMAC;
     }
 
     private function getKey(): string
@@ -43,14 +43,14 @@ class Encryption
     static public function validateCipherHMAC($cipherHMAC): void
     {
         if (!isset(array_flip(hash_hmac_algos())[$cipherHMAC])) {
-            throw new InvalidArgumentException("Cipher not valid to HMAC");
+            throw new \InvalidArgumentException("Cipher not valid to HMAC");
         }
     }
 
     static public function validateCipher(string $cipher): void
     {
         if (!isset(array_flip(openssl_get_cipher_methods())[$cipher])) {
-            throw new InvalidArgumentException("Cipher not valid");
+            throw new \InvalidArgumentException("Cipher not valid");
         }
     }
 
