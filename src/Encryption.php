@@ -7,15 +7,15 @@ use \Encryption\Exceptions\FailDecryptException;
 class Encryption
 {
 
-    private $key;
-    private $keyHMAC;
-    private $cipher;
-    private $cipherHMAC;
+    private string $key;
+    private string $securityKey;
+    private string $cipher;
+    private string $cipherHMAC;
 
-    function __construct(string $key, string $keykeyHMAC, string $cipher = 'aes-256-cbc', string $cipherHMAC = 'sha384')
+    function __construct(string $key, string $securityKey, string $cipher = 'aes-256-cbc', string $cipherHMAC = 'sha384')
     {
         $this->key = $key;
-        $this->keyHMAC = $keykeyHMAC;
+        $this->securityKey = $securityKey;
         $this->cipher = $cipher;
         $this->cipherHMAC = $cipherHMAC;
     }
@@ -25,9 +25,9 @@ class Encryption
         return $this->key;
     }
 
-    private function getKeyHMAC(): string
+    private function getSecurityKey(): string
     {
-        return $this->keyHMAC;
+        return $this->securityKey;
     }
 
     function getCipher(): string
@@ -62,7 +62,7 @@ class Encryption
         $IV = random_bytes(openssl_cipher_iv_length($Encryption->getCipher()));
 
         $textEncrypt = openssl_encrypt($text, $Encryption->getCipher(), $Encryption->getKey(), OPENSSL_RAW_DATA, $IV);
-        $textHMAC = hash_hmac($Encryption->getCipherHMAC(), $IV . $textEncrypt, $Encryption->getKeyHMAC(), true);
+        $textHMAC = hash_hmac($Encryption->getCipherHMAC(), $IV . $textEncrypt, $Encryption->getSecurityKey(), true);
         return base64_encode($textHMAC . $IV . $textEncrypt);
     }
 
@@ -77,7 +77,7 @@ class Encryption
         $IV = mb_substr($token, 48, openssl_cipher_iv_length($Encryption->getCipher()), '8bit');
         $textEncrypt = mb_substr($token, 48 + openssl_cipher_iv_length($Encryption->getCipher()), null, '8bit');
 
-        if (!hash_equals(hash_hmac($Encryption->getCipherHMAC(), $IV . $textEncrypt, $Encryption->getKeyHMAC(), true), $textHMAC)) {
+        if (!hash_equals(hash_hmac($Encryption->getCipherHMAC(), $IV . $textEncrypt, $Encryption->getSecurityKey(), true), $textHMAC)) {
             throw new FailDecryptException('Token is not equal that was generated.');
         }
 
