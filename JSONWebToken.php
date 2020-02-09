@@ -74,7 +74,7 @@ class JSONWebToken
         $textEncrypt = mb_substr($token, 48 + openssl_cipher_iv_length($this->cipher), null, '8bit');
 
         if (!hash_equals(hash_hmac($this->cipherHMAC, $IV . $textEncrypt, $this->keyHMAC, true), $textHMAC)) {
-            throw new \Exception('Token not valid');
+            throw new \Exception('Token is not valid');
         }
 
         return openssl_decrypt($textEncrypt, $this->cipher, $this->key, OPENSSL_RAW_DATA, $IV);
