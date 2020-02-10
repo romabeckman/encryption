@@ -13,14 +13,14 @@ class Payload
     public static $timestamp = null;
     public static $compareIss = false;
 
-    private array $data;
-    private ?string $jti; // “jti” ID of token
-    private ?string $iss; // “iss” The domain of the token-generating application
-    private ?string $sub; // “sub” It is the subject of the token, but it is widely used to store the user ID
-    private ?string $aud; // “aud” Defines who can use the token
-    private ?int $exp; // “exp” Token expiration date
-    private int $iat; // “iat” Token creation date
-    private int $nbf; //“nbf” Defines a date for which the token cannot be accepted before it
+    private $data;
+    private $jti; // “jti” ID of token
+    private $iss; // “iss” The domain of the token-generating application
+    private $sub; // “sub” It is the subject of the token, but it is widely used to store the user ID
+    private $aud; // “aud” Defines who can use the token
+    private $exp; // “exp” Token expiration date
+    private $iat; // “iat” Token creation date
+    private $nbf; //“nbf” Defines a date for which the token cannot be accepted before it
 
     function __construct(array $data, ?int $exp = null, ?int $nbf = null, ?int $iat = null)
     {
