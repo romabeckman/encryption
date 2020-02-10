@@ -35,7 +35,7 @@ class Jwt
 
     static function decode(Encryption $Encryption, string $token): Payload
     {
-        [$header, $data, $signature] = explode('.', $token);
+        list($header, $data, $signature) = explode('.', $token);
 
         $headerDecoded = json_decode(Utils::base64UrlDecode($header), true);
 
