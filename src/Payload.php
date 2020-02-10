@@ -12,7 +12,7 @@ class Payload
 
     public static $timestamp = null;
     public static $compareIss = false;
-    
+
     private array $data; //“nbf” Defines a date for which the token cannot be accepted before it
     private ?string $jti; // “jti” ID of token
     private ?string $iss; // “iss” The domain of the token-generating application
@@ -22,7 +22,7 @@ class Payload
     private int $iat; // “iat” Token creation date
     private int $nbf; //“nbf” Defines a date for which the token cannot be accepted before it
 
-    function __construct(array $data, ?int $exp = null, ?int $iat = null, ?int $nbf = null)
+    function __construct(array $data, ?int $exp = null, ?int $nbf = null, ?int $iat = null)
     {
         $timestamp = static::$timestamp ?: time();
 
@@ -190,7 +190,7 @@ class Payload
             throw new UnexpectedValueException('iat is missing in $payload');
         }
 
-        $Payload = new self($payload['data'] ?? [], $payload['exp'] ?? null, $payload['iat'], $payload['nbf'] ?? null);
+        $Payload = new self($payload['data'] ?? [], $payload['exp'] ?? null, $payload['nbf'] ?? null, $payload['iat']);
         $Payload
                 ->setJti($payload['jti'] ?? null)
                 ->setIss($payload['iss'] ?? null)
