@@ -63,8 +63,9 @@ class Jwt
         if (!isset($header['typ'])) {
             throw new UnexpectedValueException('typ in header is missing');
         }
-        if (!in_array($header['alg'], static::$allowed))
+        if (!in_array($header['alg'], static::$allowed)) {
             throw new UnexpectedValueException('alg ' . $header['alg'] . ' in header is not allowed.');
+        }
         if (strcmp($header['typ'], 'JWT') !== 0) {
             throw new UnexpectedValueException('typ must be JWT in header');
         }
