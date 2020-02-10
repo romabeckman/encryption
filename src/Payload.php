@@ -12,7 +12,7 @@ class Payload
 
     public static $timestamp = null;
     public static $compareIss = false;
-
+    
     private array $data; //“nbf” Defines a date for which the token cannot be accepted before it
     private ?string $jti; // “jti” ID of token
     private ?string $iss; // “iss” The domain of the token-generating application
@@ -28,7 +28,7 @@ class Payload
 
         $this->data = $data;
         $this->iat = $iat ?: $timestamp;
-        $this->nbf = $nbf ?: $timestamp;
+        $this->nbf = $nbf ?: $this->iat;
         $this->exp = $exp;
         $this->jti = null;
         $this->sub = null;
@@ -97,6 +97,12 @@ class Payload
     public function setAud(?string $aud)
     {
         $this->aud = $aud;
+        return $this;
+    }
+
+    public function setExp(?int $exp)
+    {
+        $this->exp = $exp;
         return $this;
     }
 
@@ -177,7 +183,14 @@ class Payload
 
     static public function transformToPayload(array $payload): self
     {
-        $Payload = new self((array) ($payload['data'] ?? []), $payload['exp'], $payload['iat'], $payload['nbf']);
+        if (empty($payload)) {
+            throw new InvalidArgumentException('$payload was empty');
+        }
+        if (!isset($payload['iat'])) {
+            throw new UnexpectedValueException('iat is missing in $payload');
+        }
+
+        $Payload = new self($payload['data'] ?? [], $payload['exp'] ?? null, $payload['iat'], $payload['nbf'] ?? null);
         $Payload
                 ->setJti($payload['jti'] ?? null)
                 ->setIss($payload['iss'] ?? null)
