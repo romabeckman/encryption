@@ -40,6 +40,18 @@ class Encryption
         return $this->cipherHMAC;
     }
 
+    public function setCipher(string $cipher)
+    {
+        $this->cipher = $cipher;
+        return $this;
+    }
+
+    public function setCipherHMAC(string $cipherHMAC)
+    {
+        $this->cipherHMAC = $cipherHMAC;
+        return $this;
+    }
+
     static public function validateCipherHMAC($cipherHMAC): void
     {
         if (!isset(array_flip(hash_hmac_algos())[$cipherHMAC])) {
@@ -71,7 +83,8 @@ class Encryption
         return hash_hmac($Encryption->getCipherHMAC(), $content, $Encryption->getSecurityKey(), true);
     }
 
-    static public function compareSignature(self $Encryption, string $content, string $HMAC): bool {
+    static public function compareSignature(self $Encryption, string $content, string $HMAC): bool
+    {
         return hash_equals(hash_hmac($Encryption->getCipherHMAC(), $content, $Encryption->getSecurityKey(), true), $HMAC);
     }
 

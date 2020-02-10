@@ -38,13 +38,15 @@ class Jwt
     {
         [$header, $data, $signature] = explode('.', $token);
 
-        static::validateHeader(json_decode(base64_decode($header), true));
+        $headerDecoded = json_decode(base64_decode($header), true);
 
-        $signature = base64_decode($signature);
-        if (Encryption::compareSignature($Encryption, $header . '.' . $data, $signature) == false) {
+        static::validateHeader($headerDecoded);
+        
+        $Encryption->setCipherHMAC(array_flip(static::$allowed)[$headerDecoded['alg']]);
+
+        if (Encryption::compareSignature($Encryption, $header . '.' . $data, base64_decode($signature)) == false) {
             throw new FailDecryptException('Token is not equal that was generated.');
         }
-
 
         $Payload = Payload::transformToPayload(json_decode(base64_decode($data), true));
         Payload::validatePayload($Payload);
