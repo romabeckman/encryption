@@ -13,7 +13,7 @@ class Payload
     public static $timestamp = null;
     public static $compareIss = false;
 
-    private array $data; //“nbf” Defines a date for which the token cannot be accepted before it
+    private array $data;
     private ?string $jti; // “jti” ID of token
     private ?string $iss; // “iss” The domain of the token-generating application
     private ?string $sub; // “sub” It is the subject of the token, but it is widely used to store the user ID
