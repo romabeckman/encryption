@@ -8,10 +8,10 @@ use \Encryption\Utils;
 class Encryption
 {
 
-    private string $key;
-    private string $securityKey;
-    private string $cipher;
-    private string $cipherHMAC;
+    private $key;
+    private $securityKey;
+    private $cipher;
+    private $cipherHMAC;
 
     function __construct(string $key, string $securityKey, string $cipher = 'aes-256-cbc', string $cipherHMAC = 'sha384')
     {
