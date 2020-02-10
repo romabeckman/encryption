@@ -11,8 +11,6 @@ class Payload
 {
 
     public static $timestamp = null;
-    public static $compareIss = false;
-
     private $data;
     private $jti; // “jti” ID of token
     private $iss; // “iss” The domain of the token-generating application
@@ -21,6 +19,7 @@ class Payload
     private $exp; // “exp” Token expiration date
     private $iat; // “iat” Token creation date
     private $nbf; //“nbf” Defines a date for which the token cannot be accepted before it
+    private $checkIssDomain; // Force validation of domain and set if iss is empty
 
     function __construct(array $data, ?int $exp = null, ?int $nbf = null, ?int $iat = null)
     {
@@ -33,7 +32,8 @@ class Payload
         $this->jti = null;
         $this->sub = null;
         $this->aud = null;
-        $this->iss = static::$compareIss ? static::getCurrentDomain() : null;
+        $this->checkIssDomain = false;
+        $this->iss = null;
     }
 
     public function getData(): array
@@ -76,6 +76,11 @@ class Payload
         return $this->nbf;
     }
 
+    public function getCheckIssDomain(): bool
+    {
+        return $this->checkIssDomain;
+    }
+
     public function setJti(?string $jti)
     {
         $this->jti = $jti;
@@ -106,10 +111,16 @@ class Payload
         return $this;
     }
 
+    public function setCheckIssDomain(bool $checkIssDomain)
+    {
+        $this->checkIssDomain = $checkIssDomain;
+        return $this;
+    }
+
     static public function encode(Encryption $Encryption, self $Payload, bool $urlEncode = false): string
     {
-        if (static::$compareIss && empty($Payload->getIss())) {
-            throw new InvalidDomainApplicationException('Iss param  is required to continue or set Payload::$compareIss = false.');
+        if ($Payload->getCheckIssDomain() && empty($Payload->getIss())) {
+            $Payload->setIss(static::getCurrentDomain());
         }
 
         $json = json_encode(static::transformToArray($Payload));
@@ -155,7 +166,7 @@ class Payload
             throw new ExpiredTokenException('Token is not more valid. Must renew the Token to continue access.');
         }
 
-        if (static::$compareIss) {
+        if ($Payload->getCheckIssDomain()) {
             if (empty($Payload->getIss())) {
                 throw new InvalidDomainApplicationException('Iss param is required to validate token');
             }
@@ -176,7 +187,8 @@ class Payload
             "aud" => $Payload->getAud(),
             "exp" => $Payload->getExp(),
             "iat" => $Payload->getIat(),
-            "nbf" => $Payload->getNbf()
+            "nbf" => $Payload->getNbf(),
+            "chiss" => $Payload->getCheckIssDomain()
         ];
     }
 
@@ -194,7 +206,8 @@ class Payload
                 ->setJti($payload['jti'] ?? null)
                 ->setIss($payload['iss'] ?? null)
                 ->setSub($payload['sub'] ?? null)
-                ->setAud($payload['aud'] ?? null);
+                ->setAud($payload['aud'] ?? null)
+                ->setCheckIssDomain($payload['chiss']);
 
         return $Payload;
     }
