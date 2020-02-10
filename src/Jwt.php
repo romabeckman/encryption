@@ -15,7 +15,7 @@ class Jwt
         'sha512' => 'HS512'
     ];
 
-    static function encode(Encryption $Encryption, Payload $Payload, $urlEncode = false): string
+    static function encode(Encryption $Encryption, Payload $Payload): string
     {
         $data = Payload::transformToArray($Payload);
 
@@ -29,7 +29,7 @@ class Jwt
         $jwt .= static::base64UrlEncode(json_encode($data));
         $jwt .= '.' . static::base64UrlEncode(Encryption::makeSignature($Encryption, $jwt));
 
-        return $urlEncode ? urlencode($jwt) : $jwt;
+        return $jwt;
     }
 
     static function decode(Encryption $Encryption, string $token): Payload
