@@ -62,8 +62,17 @@ class Encryption
         $IV = random_bytes(openssl_cipher_iv_length($Encryption->getCipher()));
 
         $textEncrypt = openssl_encrypt($text, $Encryption->getCipher(), $Encryption->getKey(), OPENSSL_RAW_DATA, $IV);
-        $textHMAC = hash_hmac($Encryption->getCipherHMAC(), $IV . $textEncrypt, $Encryption->getSecurityKey(), true);
+        $textHMAC = static::makeSignature($Encryption, $IV . $textEncrypt);
         return base64_encode($textHMAC . $IV . $textEncrypt);
+    }
+
+    static public function makeSignature(self $Encryption, string $content): string
+    {
+        return hash_hmac($Encryption->getCipherHMAC(), $content, $Encryption->getSecurityKey(), true);
+    }
+
+    static public function compareSignature(self $Encryption, string $content, string $HMAC): bool {
+        return hash_equals(hash_hmac($Encryption->getCipherHMAC(), $content, $Encryption->getSecurityKey(), true), $HMAC);
     }
 
     static function decrypt(self $Encryption, string $token): string
@@ -77,7 +86,7 @@ class Encryption
         $IV = mb_substr($token, 48, openssl_cipher_iv_length($Encryption->getCipher()), '8bit');
         $textEncrypt = mb_substr($token, 48 + openssl_cipher_iv_length($Encryption->getCipher()), null, '8bit');
 
-        if (!hash_equals(hash_hmac($Encryption->getCipherHMAC(), $IV . $textEncrypt, $Encryption->getSecurityKey(), true), $textHMAC)) {
+        if (static::compareSignature($Encryption, $IV . $textEncrypt, $textHMAC) == false) {
             throw new FailDecryptException('Token is not equal that was generated.');
         }
 

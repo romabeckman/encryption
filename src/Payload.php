@@ -7,12 +7,12 @@ use \Encryption\Exceptions\InvalidDomainApplicationException;
 use \Encryption\Exceptions\ExpiredTokenException;
 use \Encryption\Exceptions\TimePassedException;
 
-class JSONWebToken
+class Payload
 {
 
     public static $timestamp = null;
-    public static $defaultExpiration = '2 hours';
-    public static $compareIss = true;
+    public static $compareIss = false;
+
     private array $data; //“nbf” Defines a date for which the token cannot be accepted before it
     private ?string $jti; // “jti” ID of token
     private ?string $iss; // “iss” The domain of the token-generating application
@@ -22,23 +22,18 @@ class JSONWebToken
     private int $iat; // “iat” Token creation date
     private int $nbf; //“nbf” Defines a date for which the token cannot be accepted before it
 
-    function __construct(array $data, ?int $iat = null, ?int $nbf = null, ?int $exp = null)
+    function __construct(array $data, ?int $exp = null, ?int $iat = null, ?int $nbf = null)
     {
         $timestamp = static::$timestamp ?: time();
 
         $this->data = $data;
         $this->iat = $iat ?: $timestamp;
         $this->nbf = $nbf ?: $timestamp;
+        $this->exp = $exp;
         $this->jti = null;
         $this->sub = null;
         $this->aud = null;
-
         $this->iss = static::$compareIss ? static::getCurrentDomain() : null;
-
-        if (empty($exp))
-            $this->exp = empty(static::$defaultExpiration) ? null : strtotime(static::$defaultExpiration);
-        else
-            $this->exp = $exp;
     }
 
     public function getData(): array
@@ -105,13 +100,13 @@ class JSONWebToken
         return $this;
     }
 
-    static public function encode(Encryption $Encryption, self $JSONWebToken, $urlEncode = false): string
+    static public function encode(Encryption $Encryption, self $Payload, $urlEncode = false): string
     {
-        if (static::$compareIss && empty($JSONWebToken->getIss())) {
-            throw new InvalidDomainApplicationException('Iss param  is required to continue or set JSONWebToken::$compareIss = false.');
+        if (static::$compareIss && empty($Payload->getIss())) {
+            throw new InvalidDomainApplicationException('Iss param  is required to continue or set Payload::$compareIss = false.');
         }
 
-        $json = json_encode(static::getPayload($JSONWebToken));
+        $json = json_encode(static::transformToArray($Payload));
         if (function_exists('json_last_error') && $errno = json_last_error()) {
             throw new \DomainException("Error to encode Json: ({$errno}) " . json_last_error_msg());
         } elseif (empty($json)) {
@@ -124,75 +119,75 @@ class JSONWebToken
 
     static public function decode(Encryption $Encryption, string $token): self
     {
-        $payload = Encryption::decrypt($Encryption, $token);
-        $payload = (array) json_decode($payload);
+        $content = Encryption::decrypt($Encryption, $token);
+        $content = json_decode($content, true);
 
         if (function_exists('json_last_error') && $errno = json_last_error()) {
             throw new \DomainException("Error to decode Json: ({$errno}) " . json_last_error_msg());
         }
 
-        if (is_null($payload)) {
+        if (is_null($content)) {
             throw new \UnexpectedValueException("Invalid token value");
         }
 
-        static::validatePayload($payload);
-
-        return static::getJWT($payload);
+        $Payload = static::transformToPayload($content);
+        static::validatePayload($Payload);
+        return $Payload;
     }
 
-    static private function validatePayload($payload): void
+    static public function validatePayload(self $Payload): void
     {
         $timestamp = static::$timestamp ?: time();
-        if (isset($payload['nbf']) and!empty($payload['nbf']) && $payload['nbf'] > $timestamp) {
-            throw new TimePassedException('Cannot handle token prior to ' . date(\DateTime::ISO8601, $payload['nbf']));
+        if (!empty($Payload->getNbf()) && $Payload->getNbf() > $timestamp) {
+            throw new TimePassedException('Cannot handle token prior to ' . date(\DateTime::ISO8601, $Payload->getNbf()));
         }
 
-        if (isset($payload['iat']) and!empty($payload['iat']) && $payload['iat'] > $timestamp) {
-            throw new TimePassedException('Cannot handle token prior to ' . date(\DateTime::ISO8601, $payload['iat']));
+        if (!empty($Payload->getIat()) && $Payload->getIat() > $timestamp) {
+            throw new TimePassedException('Cannot handle token prior to ' . date(\DateTime::ISO8601, $Payload->getIat()));
         }
 
-        if (isset($payload['exp']) and!empty($payload['exp']) && $timestamp >= $payload['exp']) {
+        if (!empty($Payload->getExp()) && $timestamp >= $Payload->getExp()) {
             throw new ExpiredTokenException('Token is not more valid. Must renew the Token to continue access.');
         }
 
         if (static::$compareIss) {
-            if (!isset($payload['iss'])) {
+            if (empty($Payload->getIss())) {
                 throw new InvalidDomainApplicationException('Iss param is required to validate token');
             }
 
-            if (isset($payload['iss']) && strcmp($payload['iss'], static::getCurrentDomain()) !== 0) {
+            if (strcmp($Payload->getIss(), static::getCurrentDomain()) !== 0) {
                 throw new InvalidDomainApplicationException('The domain application is not valid');
             }
         }
     }
 
-    static private function getPayload(self $JSONWebToken): array
+    static public function transformToArray(self $Payload): array
     {
         return [
-            "data" => $JSONWebToken->getData(),
-            "jti" => $JSONWebToken->getJti(),
-            "iss" => $JSONWebToken->getIss(),
-            "sub" => $JSONWebToken->getSub(),
-            "aud" => $JSONWebToken->getAud(),
-            "exp" => $JSONWebToken->getExp(),
-            "iat" => $JSONWebToken->getIat(),
-            "nbf" => $JSONWebToken->getNbf()
+            "data" => $Payload->getData(),
+            "jti" => $Payload->getJti(),
+            "iss" => $Payload->getIss(),
+            "sub" => $Payload->getSub(),
+            "aud" => $Payload->getAud(),
+            "exp" => $Payload->getExp(),
+            "iat" => $Payload->getIat(),
+            "nbf" => $Payload->getNbf()
         ];
     }
 
-    static private function getJWT(array $payload): self
+    static public function transformToPayload(array $payload): self
     {
-        $JSONWebToken = new self((array) $payload['data'], $payload['iat'], $payload['nbf'], $payload['exp']);
-        $JSONWebToken
-                ->setJti($payload['jti'])
-                ->setIss($payload['iss'])
-                ->setSub($payload['sub'])
-                ->setAud($payload['aud']);
+        $Payload = new self((array) ($payload['data'] ?? []), $payload['exp'], $payload['iat'], $payload['nbf']);
+        $Payload
+                ->setJti($payload['jti'] ?? null)
+                ->setIss($payload['iss'] ?? null)
+                ->setSub($payload['sub'] ?? null)
+                ->setAud($payload['aud'] ?? null);
 
-        return $JSONWebToken;
+        return $Payload;
     }
 
-    static private function getCurrentDomain(): string
+    static public function getCurrentDomain(): string
     {
         return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . '://' . $_SERVER['HTTP_HOST'];
     }
