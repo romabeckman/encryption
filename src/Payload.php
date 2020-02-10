@@ -106,7 +106,7 @@ class Payload
         return $this;
     }
 
-    static public function encode(Encryption $Encryption, self $Payload, $urlEncode = false): string
+    static public function encode(Encryption $Encryption, self $Payload, bool $urlEncode = false): string
     {
         if (static::$compareIss && empty($Payload->getIss())) {
             throw new InvalidDomainApplicationException('Iss param  is required to continue or set Payload::$compareIss = false.');
@@ -119,13 +119,12 @@ class Payload
             throw new \DomainException("Error to encode Json");
         }
 
-        $token = Encryption::encrypt($Encryption, $json);
-        return $urlEncode ? urlencode($token) : $token;
+        return Encryption::encrypt($Encryption, $json, $urlEncode);
     }
 
-    static public function decode(Encryption $Encryption, string $token): self
+    static public function decode(Encryption $Encryption, string $token, bool $urlEncode = false): self
     {
-        $content = Encryption::decrypt($Encryption, $token);
+        $content = Encryption::decrypt($Encryption, $token, $urlEncode);
         $content = json_decode($content, true);
 
         if (function_exists('json_last_error') && $errno = json_last_error()) {
