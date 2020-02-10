@@ -1,7 +1,7 @@
 {
     "name": "romabeckman/encryption",
     "description": "A library to encrypt and decrypt Tokens making signature. Encode and decode (JWT) in PHP.",
-    "homepage": "https://github.com/romabeckman/Token",
+    "homepage": "https://github.com/romabeckman/encryption",
     "authors": [
         {
             "name": "Romário Beckman",
