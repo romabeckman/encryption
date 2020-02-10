@@ -1,7 +1,7 @@
 # Encryption
 
 - Require php 7.1
-- Require composer
+- composer require romabeckman/encryption
 
 ### Examples:
 
