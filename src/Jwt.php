@@ -19,17 +19,15 @@ class Jwt
     {
         $data = Payload::transformToArray($Payload);
 
-        $headers = [
+        $header = [
             "alg" => static::getAlg($Encryption->getCipherHMAC()),
             "typ" => "JWT"
         ];
 
-        $content = base64_encode(json_encode($headers));
-        $content .= '.' . base64_encode(json_encode($data));
-
-        $signature = Encryption::makeSignature($Encryption, $content);
-
-        $jwt = $content . '.' . base64_encode($signature);
+        $jwt = static::base64UrlEncode(json_encode($header));
+        $jwt .= '.';
+        $jwt .= static::base64UrlEncode(json_encode($data));
+        $jwt .= '.' . static::base64UrlEncode(Encryption::makeSignature($Encryption, $jwt));
 
         return $urlEncode ? urlencode($jwt) : $jwt;
     }
@@ -38,17 +36,17 @@ class Jwt
     {
         [$header, $data, $signature] = explode('.', $token);
 
-        $headerDecoded = json_decode(base64_decode($header), true);
+        $headerDecoded = json_decode(static::base64UrlDecode($header), true);
 
         static::validateHeader($headerDecoded);
-        
+
         $Encryption->setCipherHMAC(array_flip(static::$allowed)[$headerDecoded['alg']]);
 
-        if (Encryption::compareSignature($Encryption, $header . '.' . $data, base64_decode($signature)) == false) {
+        if (Encryption::compareSignature($Encryption, $header . '.' . $data, static::base64UrlDecode($signature)) == false) {
             throw new FailDecryptException('Token is not equal that was generated.');
         }
 
-        $Payload = Payload::transformToPayload(json_decode(base64_decode($data), true));
+        $Payload = Payload::transformToPayload(json_decode(static::base64UrlDecode($data), true));
         Payload::validatePayload($Payload);
 
         return $Payload;
@@ -81,6 +79,28 @@ class Jwt
             throw new InvalidArgumentException("Ciphet {$cipher} not allowed");
 
         return static::$allowed[$cipher];
+    }
+
+    static function base64UrlEncode(string $data)
+    {
+        $data = base64_encode($data);
+
+        if (empty($data)) {
+            throw new InvalidArgumentException('$data cant be converted to base64');
+        }
+
+        return rtrim(strtr($data, '+/', '-_'), '=');
+    }
+
+    static function base64UrlDecode(string $data)
+    {
+        $data = base64_decode(strtr($data, '-_', '+/'), true);
+
+        if (empty($data)) {
+            throw new InvalidArgumentException('$data cant be converted to base64');
+        }
+
+        return $data;
     }
 
 }
