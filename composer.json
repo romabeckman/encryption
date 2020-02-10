@@ -1,4 +1,10 @@
 {
+    "repositories":[
+        {
+            "type": "Encryption",
+            "url": "git@github.com:romabeckman/Token.git"
+        }
+    ]
     "autoload": {
         "psr-4": {
             "Encryption\\": "src/"
