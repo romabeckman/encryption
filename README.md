@@ -1,6 +1,6 @@
 # Encryption
 
-- Require php 7.0
+- Require php 7.1
 - Require composer
 
 ### Examples:
