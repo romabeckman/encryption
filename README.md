@@ -42,7 +42,7 @@ $decoded = Payload::decode($Encryption, $token);
 //$decoded = Payload::decode($Encryption, $token, true); // To get token for use in url
 ```
 
-Generate JWT token
+Generate JWT token conform [RFC 7519 (JWT)](https://tools.ietf.org/html/rfc7519) method:
 ```
 $Encryption = new Encryption('__ENCRYPT_KEY__', '__SECURITY_KEY__');
 $Payload = new Payload(
