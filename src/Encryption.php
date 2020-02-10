@@ -3,6 +3,7 @@
 namespace Encryption;
 
 use \Encryption\Exceptions\FailDecryptException;
+use \Encryption\Utils;
 
 class Encryption
 {
@@ -66,7 +67,7 @@ class Encryption
         }
     }
 
-    static public function encrypt(self $Encryption, string $text): string
+    static public function encrypt(self $Encryption, string $text, bool $encodeUrl = false): string
     {
         static::validateCipher($Encryption->getCipher());
         static::validateCipherHMAC($Encryption->getCipherHMAC());
@@ -75,7 +76,7 @@ class Encryption
 
         $textEncrypt = openssl_encrypt($text, $Encryption->getCipher(), $Encryption->getKey(), OPENSSL_RAW_DATA, $IV);
         $textHMAC = static::makeSignature($Encryption, $IV . $textEncrypt);
-        return base64_encode($textHMAC . $IV . $textEncrypt);
+        return $encodeUrl ? Utils::base64UrlEncode($textHMAC . $IV . $textEncrypt) : base64_encode($textHMAC . $IV . $textEncrypt);
     }
 
     static public function makeSignature(self $Encryption, string $content): string
@@ -88,12 +89,12 @@ class Encryption
         return hash_equals(hash_hmac($Encryption->getCipherHMAC(), $content, $Encryption->getSecurityKey(), true), $HMAC);
     }
 
-    static function decrypt(self $Encryption, string $token): string
+    static function decrypt(self $Encryption, string $token, bool $encodeUrl = false): string
     {
         static::validateCipher($Encryption->getCipher());
         static::validateCipherHMAC($Encryption->getCipherHMAC());
 
-        $token = base64_decode($token);
+        $token = $encodeUrl ? Utils::base64UrlDecode($token) : base64_decode($token);
 
         $textHMAC = mb_substr($token, 0, 48, '8bit');
         $IV = mb_substr($token, 48, openssl_cipher_iv_length($Encryption->getCipher()), '8bit');
