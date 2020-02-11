@@ -21,7 +21,7 @@ echo Encryption::decrypt($Encryption, $hash);
 // must print 'My text to example'
 ```
 
-You may encrypt only Payload without [RFC 7519 (JWT)](https://tools.ietf.org/html/rfc7519) method. Some reasons, you need encrypt only Payload and transmite by insecurity way. See example:
+You may encrypt only Payload without [RFC 7519 (JWT)](https://tools.ietf.org/html/rfc7519) method. Some reason, you need encrypt only Payload and transmite by insecurity way. Example:
 
 ``` 
 $encryption = new Encryption("__ENCRYPT_KEY__", "__SECURITY_KEY__"); 
@@ -42,7 +42,7 @@ $decoded = Payload::decode($Encryption, $token);
 //$decoded = Payload::decode($Encryption, $token, true); // To get token for use in url
 ```
 
-Generate JWT token conform [RFC 7519 (JWT)](https://tools.ietf.org/html/rfc7519) method:
+Generate JWT token conform [RFC 7519 (JWT)](https://tools.ietf.org/html/rfc7519) method. Support only: HS256, HS384 and HS512. Example:
 ```
 $Encryption = new Encryption('__ENCRYPT_KEY__', '__SECURITY_KEY__');
 $Payload = new Payload(
