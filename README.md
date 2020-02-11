@@ -10,8 +10,6 @@
 - Example3: JWT Token
 
 
-## Some examples
-
 Simple to encrypte and decrypt a text:
 
 ``` 
