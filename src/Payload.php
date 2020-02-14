@@ -6,6 +6,7 @@ use \Encryption\Encryption;
 use \Encryption\Exceptions\InvalidDomainApplicationException;
 use \Encryption\Exceptions\ExpiredTokenException;
 use \Encryption\Exceptions\TimePassedException;
+use \Encryption\Utils;
 
 class Payload
 {
@@ -120,7 +121,7 @@ class Payload
     static public function encode(Encryption $Encryption, self $Payload, bool $urlEncode = false): string
     {
         if ($Payload->getCheckIssDomain() && empty($Payload->getIss())) {
-            $Payload->setIss(static::getCurrentDomain());
+            $Payload->setIss(Utils::getCurrentDomain());
         }
 
         $json = json_encode(static::transformToArray($Payload));
@@ -171,7 +172,7 @@ class Payload
                 throw new InvalidDomainApplicationException('Iss param is required to validate token');
             }
 
-            if (strcmp($Payload->getIss(), static::getCurrentDomain()) !== 0) {
+            if (strcmp($Payload->getIss(), Utils::getCurrentDomain()) !== 0) {
                 throw new InvalidDomainApplicationException('The domain application is not valid');
             }
         }
@@ -210,11 +211,6 @@ class Payload
                 ->setCheckIssDomain($payload['chiss']);
 
         return $Payload;
-    }
-
-    static public function getCurrentDomain(): string
-    {
-        return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . '://' . $_SERVER['HTTP_HOST'];
     }
 
 }

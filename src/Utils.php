@@ -4,7 +4,6 @@ namespace Encryption;
 
 class Utils
 {
-
     static function base64UrlEncode(string $data)
     {
         $data = base64_encode($data);
@@ -27,4 +26,8 @@ class Utils
         return $data;
     }
 
+    static function getCurrentDomain(): string
+    {
+        return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . '://' . $_SERVER['HTTP_HOST'];
+    }
 }

@@ -96,9 +96,11 @@ class Encryption
 
         $token = $encodeUrl ? Utils::base64UrlDecode($token) : base64_decode($token);
 
-        $textHMAC = mb_substr($token, 0, 48, '8bit');
-        $IV = mb_substr($token, 48, openssl_cipher_iv_length($Encryption->getCipher()), '8bit');
-        $textEncrypt = mb_substr($token, 48 + openssl_cipher_iv_length($Encryption->getCipher()), null, '8bit');
+        $lengthHmac = static::lengthHmac($Encryption);
+        
+        $textHMAC = mb_substr($token, 0, $lengthHmac, '8bit');
+        $IV = mb_substr($token, $lengthHmac, openssl_cipher_iv_length($Encryption->getCipher()), '8bit');
+        $textEncrypt = mb_substr($token, $lengthHmac + openssl_cipher_iv_length($Encryption->getCipher()), null, '8bit');
 
         if (static::compareSignature($Encryption, $IV . $textEncrypt, $textHMAC) == false) {
             throw new FailDecryptException('Token is not equal that was generated.');
@@ -112,4 +114,8 @@ class Encryption
         return $text;
     }
 
+    static private function lengthHmac($Encryption)
+    {
+        return strlen(static::makeSignature($Encryption, ''));
+    }
 }
